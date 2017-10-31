@@ -5,7 +5,9 @@ module SmartCollection
     end
 
     def included base
-      p base
+      name = :products
+      reflection = Builder::SmartCollectionAssociation.build(base, name, nil, {})
+      ::ActiveRecord::Reflection.add_reflection base, name, reflection
     end
   end
 end

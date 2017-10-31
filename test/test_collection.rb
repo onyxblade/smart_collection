@@ -15,5 +15,8 @@ class TestCollection < Minitest::Test
 
     assert_includes collection.products, product_a
     assert_includes collection.products, product_b
+
+    assert_includes collection.products.to_a, product_a
+    assert_includes collection.products.to_a, product_b
   end
 end
