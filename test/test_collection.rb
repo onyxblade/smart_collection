@@ -1,7 +1,7 @@
 require_relative './test_helper'
 require 'minitest/autorun'
 
-class TestCollection < Minitest::Test
+class TestCollection < SmartCollection::Test
   def test_collection
     catalog_a = Catalog.create
     catalog_b = Catalog.create

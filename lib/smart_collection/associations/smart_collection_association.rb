@@ -2,12 +2,10 @@ module SmartCollection
   module Associations
     class SmartCollectionAssociation < ::ActiveRecord::Associations::HasManyAssociation
 
-      def scope
-        rules = self.owner.product_collection_rules.includes(:target)
-        scope = rules.inject Product.unscoped do |scope, rule|
-          scope.or(rule.target.association(rule.target_association).scope)
-          scope
-        end
+      def association_scope
+        rules_association = reflection.options[:smart_collection][:rules]
+        rules = self.owner.public_send(rules_association).includes(:target)
+        scope = rules.map{|rule| rule.target.association(rule.target_association).scope}.inject(:or)
       end
 
       def skip_statement_cache?

@@ -15,9 +15,11 @@ end
 class ProductCollection < ActiveRecord::Base
   has_many :product_collection_rules
 
-  include SmartCollection::Mixin.new -> do
-    has_many :products, class_name: 'Product'
-  end
+  include SmartCollection::Mixin.new(
+    items: :products,
+    item_class: 'Product',
+    rules: :product_collection_rules
+  )
 end
 
 class ProductCollectionRule < ActiveRecord::Base
