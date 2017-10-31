@@ -5,16 +5,14 @@ class TestMixin < SmartCollection::Test
 
   class ProductCollection < ActiveRecord::Base
     include SmartCollection::Mixin.new(
-      items: :products,
-      rules: :product_collection_rules
+      items: :products
     )
   end
 
   class CatalogCollection < ActiveRecord::Base
     include SmartCollection::Mixin.new(
       items: :catalogs,
-      item_class: 'Catalog',
-      rules: :catalog_collection_rules
+      item_class: 'Catalog'
     )
   end
 

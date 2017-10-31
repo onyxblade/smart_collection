@@ -1,10 +1,9 @@
 module SmartCollection
   class Mixin < Module
-    def initialize items:, item_class: nil, rules:
+    def initialize items:, item_class: nil
       @smart_collection_config = {
         items: items,
-        item_class: item_class,
-        rules: rules
+        item_class: item_class
       }
     end
 
