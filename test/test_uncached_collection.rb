@@ -6,23 +6,25 @@ class TestUncachedCollection < SmartCollection::Test
     @catalog_a = Catalog.create
     @catalog_b = Catalog.create
 
-    @product_a = @catalog_a.products.create
-    @product_b = @catalog_b.products.create
+    @product_a = @catalog_a.products.create(price: 10)
+    @product_b = @catalog_b.products.create(price: 20)
 
     @collection = ProductCollection.create
     @collection.rule = {
       or: [
         {
-          type: :include,
-          target_type: 'Catalog',
-          target_id: @catalog_a.id,
-          target_association: :products
+          association: {
+            class_name: 'Catalog',
+            id: @catalog_a.id,
+            source: 'products'
+          }
         },
         {
-          type: :include,
-          target_type: 'Catalog',
-          target_id: @catalog_b.id,
-          target_association: :products
+          association: {
+            class_name: 'Catalog',
+            id: @catalog_b.id,
+            source: 'products'
+          }
         }
       ]
     }
@@ -64,5 +66,51 @@ class TestUncachedCollection < SmartCollection::Test
     assert_raises do
       ProductCollection.eager_load(:products).find(@collection.id)
     end
+  end
+
+  def test_condition
+    collection_b = ProductCollection.create(rule: {
+      and: [
+        {
+          or: [
+            {
+              association: {
+                class_name: 'Catalog',
+                id: @catalog_a.id,
+                source: 'products'
+              }
+            },
+            {
+              association: {
+                class_name: 'Catalog',
+                id: @catalog_b.id,
+                source: 'products'
+              }
+            }
+          ]
+        },
+        condition: {
+          field: 'price',
+          operator: 'lt',
+          value: 20
+        }
+      ]
+    })
+
+    assert !(collection_b.products.include? @product_b)
+    assert_includes collection_b.products, @product_a
+  end
+
+  def test_collection_of_collection
+    collection_c = ProductCollection.create(rule: {
+      association: {
+        class_name: 'ProductCollection',
+        id: @collection.id,
+        source: 'products'
+      }
+    })
+
+    assert_includes collection_c.products, @product_a
+    assert_includes collection_c.products, @product_b
   end
 end
