@@ -62,6 +62,14 @@ module SmartCollection
         true
       end
 
+      def cached_scope
+        cache_by = reflection.options[:smart_collection][:cache_by]
+        case
+        when cache_by[:table]
+          owner
+        end
+      end
+
     end
   end
 end
