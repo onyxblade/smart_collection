@@ -9,7 +9,7 @@ class TestCache < SmartCollection::Test
     @product_a = @catalog_a.products.create(price: 10)
     @product_b = @catalog_b.products.create(price: 20)
 
-    @collection = ProductCollection.create
+    @collection = ProductCollectionCachedByTable.create
     @collection.rule = {
       or: [
         {
@@ -37,6 +37,16 @@ class TestCache < SmartCollection::Test
 
     assert_includes @collection.cached_products, @product_a
     assert_includes @collection.cached_products, @product_b
+
+    assert_includes @collection.cached_products.to_a, @product_a
+    assert_includes @collection.cached_products.to_a, @product_b
+  end
+
+  def test_auto_update_cache
+    @collection.expire_cache
+
+    assert_includes @collection.products.to_a, @product_a
+    assert_includes @collection.products.to_a, @product_b
 
     assert_includes @collection.cached_products.to_a, @product_a
     assert_includes @collection.cached_products.to_a, @product_b

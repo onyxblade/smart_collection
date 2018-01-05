@@ -27,7 +27,21 @@ class ProductCollection < ActiveRecord::Base
   include SmartCollection::Mixin.new(
     items: :products,
     item_class: 'Product',
-    cache_by: {
+    cached_by: {
+      table: true,
+      expires_in: 1.hour
+    }
+  )
+end
+
+class ProductCollectionCachedByTable < ActiveRecord::Base
+  self.table_name = 'product_collections'
+  serialize :rule, JSON
+
+  include SmartCollection::Mixin.new(
+    items: :products,
+    item_class: 'Product',
+    cached_by: {
       table: true,
       expires_in: 1.hour
     }
