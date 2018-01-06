@@ -38,7 +38,7 @@ module SmartCollection
       base.include(InstanceMethods)
 
       if cache_class = CacheManager.determine_class(@raw_config)
-        config.cache_manager = cache_class.new(model: base, config: @raw_config)
+        config.cache_manager = cache_class.new(model: base, config: config)
       end
 
     end

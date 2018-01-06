@@ -9,7 +9,7 @@ module SmartCollection
       end
 
       def define_cache_association_for model
-        options = @config
+        options = @config.raw_config
         cached_item_model = nil
         model.class_eval do
           cached_item_model = Class.new ActiveRecord::Base do
@@ -25,8 +25,7 @@ module SmartCollection
       end
 
       def update owner
-        p 'updateding cache'
-        association = owner.association(@config[:items])
+        association = owner.association(@config.items_name)
 
         @cache_model.where(collection_id: owner.id).delete_all
         @cache_model.connection.execute "INSERT INTO #{@cache_model.table_name} (collection_id, item_id) #{association.uncached_scope.select(owner.id, :id).to_sql}"
@@ -34,8 +33,12 @@ module SmartCollection
       end
 
       def read owner
-        cache_association = owner.association("cached_#{@config[:items]}")
+        cache_association = owner.association("cached_#{@config.items_name}")
         cache_association.scope
+      end
+
+      def cache_exists? owner
+        owner.cache_expires_at.nil? || owner.cache_expires_at < Time.now
       end
 
     end

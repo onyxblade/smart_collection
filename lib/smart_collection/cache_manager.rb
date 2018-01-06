@@ -6,13 +6,13 @@ module SmartCollection
       when config.dig(:cached_by, :table)
         SmartCollection::CacheManager::Table
       when config.dig(:cached_by, :cache_store)
+        SmartCollection::CacheManager::CacheStore
       end
     end
 
     def initialize model:, config:
       @model = model
       @config = config
-      @cache_config = config[:cached_by]
     end
 
     def update owner
@@ -24,7 +24,7 @@ module SmartCollection
     end
 
     def expires_in
-      @cache_config[:expires_in] || 1.hour
+      @config.cache_config[:expires_in] || 1.hour
     end
   end
 end

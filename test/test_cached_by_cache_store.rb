@@ -1,7 +1,7 @@
 require_relative './test_helper'
 require 'minitest/autorun'
 
-class TestCache < SmartCollection::Test
+class TestCachedByCacheStore < SmartCollection::Test
   def setup
     @catalog_a = Catalog.create
     @catalog_b = Catalog.create
@@ -9,7 +9,7 @@ class TestCache < SmartCollection::Test
     @product_a = @catalog_a.products.create(price: 10)
     @product_b = @catalog_b.products.create(price: 20)
 
-    @collection = ProductCollectionCachedByTable.create
+    @collection = ProductCollectionCachedByCacheStore.create
     @collection.rule = {
       or: [
         {
@@ -35,20 +35,18 @@ class TestCache < SmartCollection::Test
   def test_cache
     @collection.update_cache
 
-    assert_includes @collection.cached_products, @product_a
-    assert_includes @collection.cached_products, @product_b
+    assert_includes @collection.association(:products).cached_scope, @product_a
+    assert_includes @collection.association(:products).cached_scope, @product_b
 
-    assert_includes @collection.cached_products.to_a, @product_a
-    assert_includes @collection.cached_products.to_a, @product_b
+    assert_includes @collection.association(:products).cached_scope.to_a, @product_a
+    assert_includes @collection.association(:products).cached_scope.to_a, @product_b
   end
 
   def test_auto_update_cache
     @collection.expire_cache
 
-    assert_includes @collection.products.to_a, @product_a
-    assert_includes @collection.products.to_a, @product_b
-
-    assert_includes @collection.cached_products.to_a, @product_a
-    assert_includes @collection.cached_products.to_a, @product_b
+    @collection.products.to_a
+    assert_equal @collection.association(:products).cached_scope, @collection.products
+    assert_equal @collection.association(:products).cached_scope.to_a, ProductCollectionCachedByCacheStore.find(@collection.id).products
   end
 end

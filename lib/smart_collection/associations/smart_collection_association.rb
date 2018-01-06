@@ -56,10 +56,10 @@ module SmartCollection
 
       def association_scope
         if cache_manager = reflection.options[:smart_collection].cache_manager
-          if owner.cache_expires_at.nil? || owner.cache_expires_at < Time.now
+          if cache_manager.cache_exists? owner
             owner.update_cache
           end
-          cache_manager.read owner
+          cached_scope
         else
           uncached_scope
         end
@@ -71,6 +71,10 @@ module SmartCollection
 
       def uncached_scope
         ScopeBuilder.new(owner.rule, reflection.klass).build
+      end
+
+      def cached_scope
+        reflection.options[:smart_collection].cache_manager.read owner
       end
 
     end

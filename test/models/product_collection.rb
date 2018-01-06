@@ -48,6 +48,20 @@ class ProductCollectionCachedByTable < ActiveRecord::Base
   )
 end
 
+class ProductCollectionCachedByCacheStore < ActiveRecord::Base
+  self.table_name = 'product_collections'
+  serialize :rule, JSON
+
+  include SmartCollection::Mixin.new(
+    items: :products,
+    item_class: 'Product',
+    cached_by: {
+      cache_store: ActiveSupport::Cache::MemoryStore.new,
+      expires_in: 1.hour
+    }
+  )
+end
+
 class ProductCollectionRule < ActiveRecord::Base
   self.inheritance_column = nil
   belongs_to :product_collection
