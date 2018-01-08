@@ -6,7 +6,11 @@ module SmartCollection
       end
 
       def expire_cache
-        update(cache_expires_at: nil)
+        update_column(:cache_expires_at, nil)
+      end
+
+      def cache_exists?
+        smart_collection_mixin.config.cache_manager.cache_exists? self
       end
 
       def smart_collection_mixin

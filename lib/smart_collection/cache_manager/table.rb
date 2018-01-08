@@ -38,7 +38,7 @@ module SmartCollection
       end
 
       def cache_exists? owner
-        owner.cache_expires_at.nil? || owner.cache_expires_at < Time.now
+        !(owner.cache_expires_at.nil? || owner.cache_expires_at < Time.now)
       end
 
     end

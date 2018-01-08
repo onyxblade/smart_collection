@@ -56,7 +56,7 @@ module SmartCollection
 
       def association_scope
         if cache_manager = reflection.options[:smart_collection].cache_manager
-          if cache_manager.cache_exists? owner
+          unless cache_manager.cache_exists? owner
             owner.update_cache
           end
           cached_scope
