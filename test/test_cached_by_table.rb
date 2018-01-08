@@ -84,4 +84,10 @@ class TestCachedByTable < SmartCollection::Test
       ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).preload(:products).map{|x| x.products.to_a}
     end
   end
+
+  def test_eager_load
+    assert_raises RuntimeError do
+      ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).eager_load(:products).map{|x| x.products.to_a}
+    end
+  end
 end

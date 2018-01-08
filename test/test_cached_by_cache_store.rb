@@ -30,6 +30,19 @@ class TestCachedByCacheStore < SmartCollection::Test
     }
 
     @collection.save
+    @collection_b = ProductCollectionCachedByTable.create(
+      rule: {
+        or: [
+          {
+            association: {
+              class_name: 'Catalog',
+              id: @catalog_a.id,
+              source: 'products'
+            }
+          }
+        ]
+      }
+    )
   end
 
   def test_cache
@@ -44,9 +57,31 @@ class TestCachedByCacheStore < SmartCollection::Test
 
   def test_auto_update_cache
     @collection.expire_cache
-
     @collection.products.to_a
+
+    assert @collection.cache_expires_at > Time.now
+
     assert_equal @collection.association(:products).cached_scope, @collection.products
     assert_equal @collection.association(:products).cached_scope.to_a, ProductCollectionCachedByCacheStore.find(@collection.id).products
   end
+
+  def test_preload
+    [@collection, @collection_b].map(&:expire_cache)
+
+    ProductCollectionCachedByCacheStore.where(id: [@collection.id, @collection_b.id]).preload(:products).to_a
+
+    assert_queries 2 do
+      ProductCollectionCachedByCacheStore.where(id: [@collection.id, @collection_b.id]).preload(:products).map{|x| x.products.to_a}
+    end
+
+    [@collection, @collection_b].map(&:expire_cache)
+
+    ProductCollectionCachedByCacheStore.find(@collection.id).products.to_a
+    ProductCollectionCachedByCacheStore.find(@collection_b.id).products.to_a
+
+    assert_queries 2 do
+      ProductCollectionCachedByCacheStore.where(id: [@collection.id, @collection_b.id]).preload(:products).map{|x| x.products.to_a}
+    end
+  end
+
 end
