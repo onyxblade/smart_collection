@@ -1,5 +1,4 @@
 require_relative './test_helper'
-require 'minitest/autorun'
 
 class TestUncachedCollection < SmartCollection::Test
   def setup

@@ -2,6 +2,7 @@ require 'active_record'
 require_relative '../lib/smart_collection'
 require 'database_cleaner'
 require 'minitest'
+require 'minitest/autorun'
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 
