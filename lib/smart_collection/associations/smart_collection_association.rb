@@ -40,7 +40,9 @@ module SmartCollection
           when assoc = rule['association']
             @klass_hash[assoc['class_name']][assoc['id']].association(assoc['source']).scope
           when cond = rule['scope']
-            @klass.where(cond['where'])
+            scope = @klass
+            scope = scope.joins(cond['joins'].to_sym) if cond['joins']
+            scope.where(cond['where'])
           end
         end
       end

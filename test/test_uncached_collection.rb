@@ -106,4 +106,30 @@ class TestUncachedCollection < SmartCollection::Test
       assert_includes pen_and_pencil_cheaper_than_3_collection.products, product
     end
   end
+
+  def test_scope_with_joins
+    red_pen_and_pencil_collection = ProductCollection.create(rule: {
+      and: [
+        {
+          association: {
+            class_name: 'ProductCollection',
+            id: @pen_and_pencil_collection.id,
+            source: 'products'
+          }
+        },
+        {
+          scope: {
+            joins: 'properties',
+            where: 'properties.value = "Red"'
+          }
+        }
+      ]
+    })
+
+    expected_to_include = [@pen_catalog, @pencil_catalog].map(&:products).flatten.select{|x| x.properties.find{|x| x.value == 'Red'}}
+    assert_equal expected_to_include.size, red_pen_and_pencil_collection.products.size
+    expected_to_include.each do |product|
+      assert_includes red_pen_and_pencil_collection.products, product
+    end
+  end
 end
