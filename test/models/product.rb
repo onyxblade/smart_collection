@@ -6,6 +6,6 @@ ActiveRecord::Base.connection.create_table(:products, force: true) do |t|
 end
 
 class Product < ActiveRecord::Base
-  has_and_belongs_to_many :stock_keeping_units
+  has_and_belongs_to_many :properties
   belongs_to :catalog
 end

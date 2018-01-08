@@ -2,114 +2,108 @@ require_relative './test_helper'
 
 class TestUncachedCollection < SmartCollection::Test
   def setup
-    @catalog_a = Catalog.create
-    @catalog_b = Catalog.create
-
-    @product_a = @catalog_a.products.create(price: 10)
-    @product_b = @catalog_b.products.create(price: 20)
-
-    @collection = ProductCollection.create
-    @collection.rule = {
-      or: [
-        {
-          association: {
-            class_name: 'Catalog',
-            id: @catalog_a.id,
-            source: 'products'
-          }
-        },
-        {
-          association: {
-            class_name: 'Catalog',
-            id: @catalog_b.id,
-            source: 'products'
-          }
-        }
-      ]
-    }
-
-    @collection.save
+    load_fixtures
+    @pen_and_pencil_products = [@pen_catalog.products, @pencil_catalog.products].flatten
+    @pen_and_marker_products = [@pen_catalog.products, @marker_catalog.products].flatten
   end
 
   def test_includes
-    assert_includes @collection.products, @product_a
-    assert_includes @collection.products, @product_b
-
-    assert_includes @collection.products.to_a, @product_a
-    assert_includes @collection.products.to_a, @product_b
+    @pen_and_pencil_products.each do |product|
+      assert_includes @pen_and_pencil_collection.products, product
+      assert_includes @pen_and_pencil_collection.products.to_a, product
+    end
   end
 
   def test_order
-    ordered = @collection.products.order(id: :desc).to_a
+    ordered = @pen_and_pencil_collection.products.order(id: :desc).to_a
     assert_equal ordered.sort_by(&:id).reverse, ordered
   end
 
   def test_limit
-    assert @collection.products.size > 1
-    assert_equal 1, @collection.products.limit(1).size
+    assert @pen_and_pencil_collection.products.size > 1
+    assert_equal 1, @pen_and_pencil_collection.products.limit(1).size
   end
 
   def test_where
-    whered = @collection.products.where(id: @product_b.id)
+    whered = @pen_and_pencil_collection.products.where(id: @red_pen.id)
     assert_equal 1, whered.size
-    assert_equal @product_b, whered.first
+    assert_equal @red_pen, whered.first
   end
 
   def test_preload
     assert_raises do
-      ProductCollection.preload(:products).find(@collection.id)
+      ProductCollection.preload(:products).find(@pen_and_pencil_collection.id)
     end
   end
 
   def test_eager_load
     assert_raises do
-      ProductCollection.eager_load(:products).find(@collection.id)
+      ProductCollection.eager_load(:products).find(@pen_and_pencil_collection.id)
     end
   end
 
   def test_condition
-    collection_b = ProductCollection.create(rule: {
+    pen_and_pencil_cheaper_than_3_collection = ProductCollection.create(
+      rule: {
+        and: [
+          {
+            or: [
+              {
+                association: {
+                  class_name: 'Catalog',
+                  id: @pen_catalog.id,
+                  source: 'products'
+                }
+              },
+              {
+                association: {
+                  class_name: 'Catalog',
+                  id: @pencil_catalog.id,
+                  source: 'products'
+                }
+              }
+            ]
+          },
+          {
+            scope: {
+              where: 'price < 3'
+            }
+          }
+        ]
+      }
+    )
+
+    expected_to_include = [@pen_catalog, @pencil_catalog].map(&:products).flatten.select{|x| x.price < 3}
+
+    assert_equal expected_to_include.size, pen_and_pencil_cheaper_than_3_collection.products.size
+    expected_to_include.each do |product|
+      assert_includes pen_and_pencil_cheaper_than_3_collection.products, product
+    end
+  end
+
+  def test_collection_of_collection
+    pen_and_pencil_cheaper_than_3_collection = ProductCollection.create(rule: {
       and: [
         {
-          or: [
-            {
-              association: {
-                class_name: 'Catalog',
-                id: @catalog_a.id,
-                source: 'products'
-              }
-            },
-            {
-              association: {
-                class_name: 'Catalog',
-                id: @catalog_b.id,
-                source: 'products'
-              }
-            }
-          ]
+          association: {
+            class_name: 'ProductCollection',
+            id: @pen_and_pencil_collection.id,
+            source: 'products'
+          }
         },
-        condition: {
-          field: 'price',
-          operator: 'lt',
-          value: 20
+        {
+          scope: {
+            where: 'price < 3'
+          }
         }
       ]
     })
 
-    assert !(collection_b.products.include? @product_b)
-    assert_includes collection_b.products, @product_a
-  end
+    expected_to_include = [@pen_catalog, @pencil_catalog].map(&:products).flatten.select{|x| x.price < 3}
 
-  def test_collection_of_collection
-    collection_c = ProductCollection.create(rule: {
-      association: {
-        class_name: 'ProductCollection',
-        id: @collection.id,
-        source: 'products'
-      }
-    })
-
-    assert_includes collection_c.products, @product_a
-    assert_includes collection_c.products, @product_b
+    assert_equal expected_to_include.size, pen_and_pencil_cheaper_than_3_collection.products.size
+    expected_to_include.each do |product|
+      assert_includes pen_and_pencil_cheaper_than_3_collection.products, product
+    end
   end
 end

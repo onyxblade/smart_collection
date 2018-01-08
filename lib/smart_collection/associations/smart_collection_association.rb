@@ -39,17 +39,8 @@ module SmartCollection
             ands.map{|x| rule_to_scope x}.inject(:merge)
           when assoc = rule['association']
             @klass_hash[assoc['class_name']][assoc['id']].association(assoc['source']).scope
-          when cond = rule['condition']
-            case cond['operator']
-            when 'lt'
-              @klass.where("#{cond['field']} < #{cond['value']}")
-            when 'lte'
-              @klass.where("#{cond['field']} <= #{cond['value']}")
-            when 'gt'
-              @klass.where("#{cond['field']} > #{cond['value']}")
-            when 'gte'
-              @klass.where("#{cond['field']} >= #{cond['value']}")
-            end
+          when cond = rule['scope']
+            @klass.where(cond['where'])
           end
         end
       end

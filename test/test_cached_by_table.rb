@@ -2,91 +2,68 @@ require_relative './test_helper'
 
 class TestCachedByTable < SmartCollection::Test
   def setup
-    @catalog_a = Catalog.create
-    @catalog_b = Catalog.create
-
-    @product_a = @catalog_a.products.create(price: 10)
-    @product_b = @catalog_b.products.create(price: 20)
-
-    @collection = ProductCollectionCachedByTable.create
-    @collection.rule = {
-      or: [
-        {
-          association: {
-            class_name: 'Catalog',
-            id: @catalog_a.id,
-            source: 'products'
-          }
-        },
-        {
-          association: {
-            class_name: 'Catalog',
-            id: @catalog_b.id,
-            source: 'products'
-          }
-        }
-      ]
-    }
-
-    @collection.save
-
-    @collection_b = ProductCollectionCachedByTable.create(
-      rule: {
-        or: [
-          {
-            association: {
-              class_name: 'Catalog',
-              id: @catalog_a.id,
-              source: 'products'
-            }
-          }
-        ]
-      }
-    )
+    load_fixtures
+    @pen_and_pencil_collection = ProductCollectionCachedByTable.find(@pen_and_pencil_collection.id)
+    @pen_and_marker_collection = ProductCollectionCachedByTable.find(@pen_and_marker_collection.id)
+    @pen_and_pencil_products = [@pen_catalog.products, @pencil_catalog.products].flatten
+    @pen_and_marker_products = [@pen_catalog.products, @marker_catalog.products].flatten
   end
 
-  def test_cache
-    @collection.update_cache
+  def test_update_cache
+    @pen_and_pencil_collection.update_cache
 
-    assert_includes @collection.cached_products, @product_a
-    assert_includes @collection.cached_products, @product_b
+    assert_equal @pen_and_pencil_products.size, @pen_and_pencil_collection.cached_products.size
+    @pen_and_pencil_products.each do |product|
+      assert_includes @pen_and_pencil_collection.cached_products, product
+      assert_includes @pen_and_pencil_collection.cached_products.to_a, product
+    end
+  end
 
-    assert_includes @collection.cached_products.to_a, @product_a
-    assert_includes @collection.cached_products.to_a, @product_b
+  def test_expire_cache
+    @pen_and_pencil_collection.update_cache
+    assert @pen_and_pencil_collection.cache_exists?
+    @pen_and_pencil_collection.expire_cache
+    refute @pen_and_pencil_collection.cache_exists?
   end
 
   def test_auto_update_cache
-    @collection.expire_cache
-    @collection.reload.products.to_a
+    @pen_and_pencil_collection.expire_cache
+    @pen_and_pencil_collection.reload.products.to_a
 
-    assert @collection.cache_expires_at > Time.now
-
-    assert_equal @collection.cached_products, @collection.products
-    assert_equal @collection.cached_products, ProductCollectionCachedByTable.find(@collection.id).products
+    assert @pen_and_pencil_collection.cache_expires_at > Time.now
+    assert_equal @pen_and_pencil_collection.cached_products, @pen_and_pencil_collection.reload.products
   end
 
   def test_preload
-    [@collection, @collection_b].map(&:expire_cache)
+    [@pen_and_pencil_collection, @pen_and_marker_collection].map(&:expire_cache)
 
-    ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).preload(:products).to_a
-
-    assert_queries 3 do
-      ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).preload(:products).map{|x| x.products.to_a}
-    end
-
-    [@collection, @collection_b].map(&:expire_cache)
-
-    ProductCollectionCachedByTable.find(@collection.id).products.to_a
-    ProductCollectionCachedByTable.find(@collection_b.id).products.to_a
+    @pen_and_pencil_collection.reload.products.to_a
+    @pen_and_marker_collection.reload.products.to_a
 
     assert_queries 3 do
-      ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).preload(:products).map{|x| x.products.to_a}
+      pen_and_pencil, pen_and_marker = ProductCollectionCachedByTable.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).preload(:products).to_a
+      assert_equal @pen_and_pencil_products.size, pen_and_pencil.products.size
+      assert_equal @pen_and_marker_products.size, pen_and_marker.products.size
+
+      @pen_and_pencil_products.each do |product|
+        assert_includes pen_and_pencil.products, product
+      end
+      @pen_and_marker_products.each do |product|
+        assert_includes pen_and_marker.products, product
+      end
     end
+  end
+
+  def test_preload_auto_update_cache
+    [@pen_and_pencil_collection, @pen_and_marker_collection].map(&:expire_cache)
+    ProductCollectionCachedByTable.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).preload(:products).to_a
+    assert @pen_and_pencil_collection.reload.cache_exists?
+    assert @pen_and_marker_collection.reload.cache_exists?
   end
 
   def test_eager_load
     assert_raises RuntimeError do
-      ProductCollectionCachedByTable.where(id: [@collection.id, @collection_b.id]).eager_load(:products).map{|x| x.products.to_a}
+      ProductCollectionCachedByTable.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).eager_load(:products).map{|x| x.products.to_a}
     end
   end
 end
