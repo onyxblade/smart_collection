@@ -16,11 +16,6 @@ ActiveRecord::Base.connection.create_table(:smart_collection_cached_items, force
   t.integer :item_id
 end
 
-class SmartCollection::CachedItem < ActiveRecord::Base
-  self.table_name = :smart_collection_cached_items
-  belongs_to :item
-end
-
 class ProductCollection < ActiveRecord::Base
   serialize :rule, JSON
 

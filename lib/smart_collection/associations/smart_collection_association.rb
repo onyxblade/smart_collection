@@ -39,7 +39,7 @@ module SmartCollection
             ands.map{|x| rule_to_scope x}.inject(:merge)
           when assoc = rule['association']
             @klass_hash[assoc['class_name']][assoc['id']].association(assoc['source']).scope
-          when cond = rule['scope']
+          when cond = rule['condition']
             scope = @klass
             scope = scope.joins(cond['joins'].to_sym) if cond['joins']
             scope.where(cond['where'])

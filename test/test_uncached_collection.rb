@@ -65,7 +65,7 @@ class TestUncachedCollection < SmartCollection::Test
             ]
           },
           {
-            scope: {
+            condition: {
               where: 'price < 3'
             }
           }
@@ -92,7 +92,7 @@ class TestUncachedCollection < SmartCollection::Test
           }
         },
         {
-          scope: {
+          condition: {
             where: 'price < 3'
           }
         }
@@ -118,9 +118,13 @@ class TestUncachedCollection < SmartCollection::Test
           }
         },
         {
-          scope: {
+          condition: {
             joins: 'properties',
-            where: 'properties.value = "Red"'
+            where: {
+              properties: {
+                value: 'Red'
+              }
+            }
           }
         }
       ]
