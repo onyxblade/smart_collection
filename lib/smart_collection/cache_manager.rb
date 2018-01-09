@@ -19,7 +19,11 @@ module SmartCollection
       raise NotImplementedError
     end
 
-    def read owner
+    def read_scope owner
+      raise NotImplementedError
+    end
+
+    def cache_exists? owner
       raise NotImplementedError
     end
 

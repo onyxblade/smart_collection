@@ -2,12 +2,18 @@ module SmartCollection
   class CacheManager
     class CacheStore < CacheManager
 
+      def initialize model:, config:
+        super
+
+        @cache_key_proc = @config.cache_config[:cache_key_proc] || -> (owner) { "_smart_collection_#{owner.class.name}_#{owner.id}" }
+      end
+
       def cache_store
         @config.cache_config[:cache_store]
       end
 
       def cache_key owner
-        "_smart_collection_#{owner.class.name}_#{owner.id}"
+        @cache_key_proc.(owner)
       end
 
       def update owner
@@ -17,7 +23,7 @@ module SmartCollection
         owner.update(cache_expires_at: Time.now + expires_in)
       end
 
-      def read owner
+      def read_scope owner
         @config.item_class.where(id: Marshal.load(cache_store.read(cache_key owner)))
       end
 
@@ -30,7 +36,7 @@ module SmartCollection
       end
 
       def cache_exists? owner
-        !(owner.cache_expires_at.nil? || owner.cache_expires_at < Time.now) && cache_store.exist?(cache_key owner)
+        owner.cache_expires_at && owner.cache_expires_at > Time.now && cache_store.exist?(cache_key owner)
       end
 
     end

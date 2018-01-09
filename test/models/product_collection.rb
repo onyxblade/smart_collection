@@ -21,7 +21,7 @@ class ProductCollection < ActiveRecord::Base
 
   include SmartCollection::Mixin.new(
     items: :products,
-    item_class: 'Product'
+    class_name: 'Product'
   )
 end
 
@@ -31,7 +31,7 @@ class ProductCollectionCachedByTable < ActiveRecord::Base
 
   include SmartCollection::Mixin.new(
     items: :products,
-    item_class: 'Product',
+    class_name: 'Product',
     cached_by: {
       table: true,
       expires_in: 1.hour
@@ -45,7 +45,7 @@ class ProductCollectionCachedByCacheStore < ActiveRecord::Base
 
   include SmartCollection::Mixin.new(
     items: :products,
-    item_class: 'Product',
+    class_name: 'Product',
     cached_by: {
       cache_store: ActiveSupport::Cache::MemoryStore.new,
       expires_in: 1.hour

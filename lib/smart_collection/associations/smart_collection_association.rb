@@ -67,7 +67,7 @@ module SmartCollection
       end
 
       def cached_scope
-        reflection.options[:smart_collection].cache_manager.read owner
+        reflection.options[:smart_collection].cache_manager.read_scope owner
       end
 
     end
