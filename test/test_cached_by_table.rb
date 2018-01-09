@@ -62,8 +62,22 @@ class TestCachedByTable < SmartCollection::Test
   end
 
   def test_eager_load
-    assert_raises RuntimeError do
-      ProductCollectionCachedByTable.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).eager_load(:products).map{|x| x.products.to_a}
+    [@pen_and_pencil_collection, @pen_and_marker_collection].map(&:expire_cache)
+
+    @pen_and_pencil_collection.reload.products.to_a
+    @pen_and_marker_collection.reload.products.to_a
+
+    assert_queries 1 do
+      pen_and_pencil, pen_and_marker = ProductCollectionCachedByTable.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).eager_load(:products).to_a
+      assert_equal @pen_and_pencil_products.size, pen_and_pencil.products.size
+      assert_equal @pen_and_marker_products.size, pen_and_marker.products.size
+
+      @pen_and_pencil_products.each do |product|
+        assert_includes pen_and_pencil.products, product
+      end
+      @pen_and_marker_products.each do |product|
+        assert_includes pen_and_marker.products, product
+      end
     end
   end
 end

@@ -6,7 +6,14 @@ module SmartCollection
       end
 
       def check_eager_loadable!
-        raise RuntimeError, 'eager_load is not supported by now.'
+        unless options[:smart_collection].cache_manager.instance_of? SmartCollection::CacheManager::Table
+          raise RuntimeError, 'eager_load is only supported when using table for cache.'
+        end
+      end
+
+      def chain
+        items_name = options[:smart_collection].items_name
+        active_record.reflect_on_association("cached_#{items_name}".to_sym).chain
       end
     end
   end

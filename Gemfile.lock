@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     smart_collection (0.0.1)
-      activerecord
+      activerecord (>= 5.0)
 
 GEM
   remote: https://rubygems.org/
