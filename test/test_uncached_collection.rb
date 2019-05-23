@@ -81,6 +81,39 @@ class TestUncachedCollection < SmartCollection::Test
     end
   end
 
+  def test_where_in_condition
+    collection_by_id = ProductCollection.create(
+      rule: {
+        condition: {
+          where: {
+            id: @pen_catalog.products.map(&:id)
+          }
+        }
+      }
+    )
+    assert_equal @pen_catalog.products.size, collection_by_id.products.size
+    @pen_catalog.products.each do |product|
+      assert_includes collection_by_id.products, product
+    end
+  end
+
+  # TODO
+  def test_new_collection
+    collection_by_id = ProductCollection.new(
+      rule: {
+        condition: {
+          where: {
+            id: @pen_catalog.products.map(&:id)
+          }
+        }
+      }
+    )
+    #assert_equal @pen_catalog.products.size, collection_by_id.products.size
+    #@pen_catalog.products.each do |product|
+    #  assert_includes collection_by_id.products, product
+    #end
+  end
+
   def test_collection_of_collection
     pen_and_pencil_cheaper_than_3_collection = ProductCollection.create(rule: {
       and: [
