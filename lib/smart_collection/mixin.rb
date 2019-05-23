@@ -50,6 +50,8 @@ module SmartCollection
         config.cache_manager = cache_class.new(model: base, config: config)
       end
 
+      base.validates_with SmartCollection::Validator
+
     end
   end
 end
