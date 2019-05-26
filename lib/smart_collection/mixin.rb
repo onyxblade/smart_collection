@@ -33,7 +33,7 @@ module SmartCollection
     end
 
     def uncached_scope owner
-      SmartCollection::Associations::SmartCollectionAssociation::ScopeBuilder.new(owner.rule, @config.item_class).build
+      SmartCollection::ScopeBuilder.new(owner.rule, @config.item_class).build
     end
 
     def cached_scope owner
@@ -47,9 +47,6 @@ module SmartCollection
       if config.item_class_name
         reflection_options[:class_name] = config.item_class_name
       end
-
-      #reflection = Builder::SmartCollectionAssociation.build(base, config.items_name, nil, reflection_options)
-      #::ActiveRecord::Reflection.add_reflection base, config.items_name, reflection
 
       base.include(InstanceMethods)
       base.extend(ClassMethods)
