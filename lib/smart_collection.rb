@@ -1,4 +1,4 @@
-require 'active_record'
+require 'associationist'
 
 Dir.glob("#{File.dirname(__FILE__)}/**/*.rb").each do |file|
   require file

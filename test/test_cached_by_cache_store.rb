@@ -12,10 +12,10 @@ class TestCachedByCacheStore < SmartCollection::Test
   def test_update_cache
     @pen_and_pencil_collection.update_cache
 
-    assert_equal @pen_and_pencil_products.size, @pen_and_pencil_collection.association(:products).cached_scope.size
+    assert_equal @pen_and_pencil_products.size, @pen_and_pencil_collection.smart_collection_mixin.cached_scope(@pen_and_pencil_collection).size
     @pen_and_pencil_products.each do |product|
-      assert_includes @pen_and_pencil_collection.association(:products).cached_scope, product
-      assert_includes @pen_and_pencil_collection.association(:products).cached_scope.to_a, product
+      assert_includes @pen_and_pencil_collection.smart_collection_mixin.cached_scope(@pen_and_pencil_collection), product
+      assert_includes @pen_and_pencil_collection.smart_collection_mixin.cached_scope(@pen_and_pencil_collection).to_a, product
     end
   end
 
@@ -31,7 +31,7 @@ class TestCachedByCacheStore < SmartCollection::Test
     @pen_and_pencil_collection.reload.products.to_a
 
     assert @pen_and_pencil_collection.cache_expires_at > Time.now
-    assert_equal @pen_and_pencil_collection.association(:products).cached_scope, @pen_and_pencil_collection.reload.products
+    assert_equal @pen_and_pencil_collection.smart_collection_mixin.cached_scope(@pen_and_pencil_collection), @pen_and_pencil_collection.reload.products
   end
 
   def test_preload
@@ -62,7 +62,7 @@ class TestCachedByCacheStore < SmartCollection::Test
   end
 
   def test_eager_load
-    assert_raises RuntimeError do
+    assert_raises do
       ProductCollectionCachedByCacheStore.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).eager_load(:products).map{|x| x.products.to_a}
     end
   end

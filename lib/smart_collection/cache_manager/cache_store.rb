@@ -17,9 +17,7 @@ module SmartCollection
       end
 
       def update owner
-        association = owner.association(@config.items_name)
-
-        cache_store.write(cache_key(owner), Marshal.dump(association.uncached_scope.pluck(:id)))
+        cache_store.write(cache_key(owner), Marshal.dump(owner.smart_collection_mixin.uncached_scope(owner).pluck(:id)))
         owner.update(cache_expires_at: Time.now + expires_in)
       end
 
