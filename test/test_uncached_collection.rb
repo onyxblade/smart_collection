@@ -97,7 +97,6 @@ class TestUncachedCollection < SmartCollection::Test
     end
   end
 
-  # TODO
   def test_new_collection
     collection_by_id = ProductCollection.new(
       rule: {
@@ -108,10 +107,11 @@ class TestUncachedCollection < SmartCollection::Test
         }
       }
     )
-    #assert_equal @pen_catalog.products.size, collection_by_id.products.size
-    #@pen_catalog.products.each do |product|
-    #  assert_includes collection_by_id.products, product
-    #end
+
+    assert_equal @pen_catalog.products.size, collection_by_id.products.size
+    @pen_catalog.products.each do |product|
+      assert_includes collection_by_id.products, product
+    end
   end
 
   def test_collection_of_collection
