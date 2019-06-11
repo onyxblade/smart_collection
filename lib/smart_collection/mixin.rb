@@ -58,13 +58,17 @@ module SmartCollection
       mixin_options = {
         name: config.items_name,
         scope: -> owner {
-          if cache_manager = config.cache_manager
-            unless cache_manager.cache_exists? owner
-              owner.update_cache
-            end
-            cached_scope(owner)
-          else
+          if owner.new_record?
             uncached_scope(owner)
+          else
+            if cache_manager = config.cache_manager
+              unless cache_manager.cache_exists? owner
+                owner.update_cache
+              end
+              cached_scope(owner)
+            else
+              uncached_scope(owner)
+            end
           end
         },
         type: :collection

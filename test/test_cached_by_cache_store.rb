@@ -66,4 +66,21 @@ class TestCachedByCacheStore < SmartCollection::Test
       ProductCollectionCachedByCacheStore.where(id: [@pen_and_pencil_collection.id, @pen_and_marker_collection.id]).eager_load(:products).map{|x| x.products.to_a}
     end
   end
+
+  def test_new_collection
+    collection_by_id = ProductCollectionCachedByCacheStore.new(
+      rule: {
+        condition: {
+          where: {
+            id: @pen_catalog.products.map(&:id)
+          }
+        }
+      }
+    )
+
+    assert_equal @pen_catalog.products.size, collection_by_id.products.size
+    @pen_catalog.products.each do |product|
+      assert_includes collection_by_id.products, product
+    end
+  end
 end

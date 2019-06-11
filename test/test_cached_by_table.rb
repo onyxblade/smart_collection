@@ -61,6 +61,23 @@ class TestCachedByTable < SmartCollection::Test
     assert @pen_and_marker_collection.reload.cache_exists?
   end
 
+  def test_new_collection
+    collection_by_id = ProductCollectionCachedByTable.new(
+      rule: {
+        condition: {
+          where: {
+            id: @pen_catalog.products.map(&:id)
+          }
+        }
+      }
+    )
+
+    assert_equal @pen_catalog.products.size, collection_by_id.products.size
+    @pen_catalog.products.each do |product|
+      assert_includes collection_by_id.products, product
+    end
+  end
+
   # TODO
 =begin
   def test_eager_load
