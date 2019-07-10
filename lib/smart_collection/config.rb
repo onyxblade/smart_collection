@@ -26,5 +26,17 @@ module SmartCollection
     def cache_config
       @raw_config[:cached_by]
     end
+
+    def scopes_proc
+      @raw_config[:scopes]
+    end
+
+    def inverse_association
+      @raw_config[:inverse_association]
+    end
+
+    def cache_table_name
+      :smart_collection_cached_items
+    end
   end
 end

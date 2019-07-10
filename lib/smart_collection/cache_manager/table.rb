@@ -25,9 +25,14 @@ module SmartCollection
       end
 
       def update owner
+        scopes = @config.scopes_proc.(owner)
+        expires_at = Time.now + expires_in
         @cache_model.where(collection_id: owner.id).delete_all
-        @cache_model.connection.execute "INSERT INTO #{@cache_model.table_name} (collection_id, item_id) #{owner.smart_collection_mixin.uncached_scope(owner).select(owner.id, :id).to_sql}"
-        owner.update_column(:cache_expires_at, Time.now + expires_in)
+        scopes.each do |scope|
+          sql = scope.select(owner.id, :id).to_sql
+          @cache_model.connection.execute "INSERT INTO #{@cache_model.table_name} (collection_id, item_id) #{sql}"
+        end
+        owner.update_column(:cache_expires_at, expires_at)
       end
 
       def read_scope owner

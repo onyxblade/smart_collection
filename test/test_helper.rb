@@ -3,7 +3,6 @@ require_relative '../lib/smart_collection'
 require 'database_cleaner'
 require 'minitest'
 require 'minitest/autorun'
-require_relative './fixtures'
 require 'pry'
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
@@ -15,8 +14,25 @@ end
 DatabaseCleaner.strategy = :truncation
 
 module SmartCollection
+  module TestHelpers
+    def collection_with_scopes scopes
+      collection = Collection.create(scopes: scopes)
+      collection
+    end
+
+    def reload_and_reset_scopes collection, scopes
+      collection.scopes = scopes
+      collection.save!
+      collection.reload
+    end
+
+    def ensure_association_loaded collection
+      collection.products.to_a
+    end
+  end
+
   class Test < ::Minitest::Test
-    include Fixtures
+    include TestHelpers
 
     def teardown
       DatabaseCleaner.clean

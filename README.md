@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/smart_collection.svg)](https://badge.fury.io/rb/smart_collection) [![Build Status](https://travis-ci.org/CicholGricenchos/smart_collection.svg?branch=master)](https://travis-ci.org/CicholGricenchos/smart_collection)
 
-An ActiveRecord plugin that allows you to create collections by rules.
+Smart collection or automated collection is [a concept raised by Shopify](https://help.shopify.com/en/manual/products/collections/automated-collections). Those collections automatically include or exclude items according to conditions defined by users.
 
 Install
 ------
@@ -17,7 +17,6 @@ Define a collection model:
 class CreateCollections < ActiveRecord::Migration[5.0]
   def change
     create_table :collections do |t|
-      t.text :rule # You can use other implements here, but be sure rule returns a hash
       t.datetime :cache_expires_at
       t.timestamps
     end
@@ -25,11 +24,12 @@ class CreateCollections < ActiveRecord::Migration[5.0]
 end
 
 class Collection < ActiveRecord::Base
-  serialize :rule, JSON
-
   include SmartCollection::Mixin.new(
     items: :products,
-    class_name: 'Product' # Optional
+    class_name: 'Product', # Optional
+    scopes: -> (collection) {
+      Product.all
+    }
   )
 end
 ```
@@ -96,6 +96,7 @@ class CreateSmartCollectionCachedItems < ActiveRecord::Migration[5.0]
     create_table :smart_collection_cached_items do |t|
       t.integer :collection_id
       t.integer :item_id
+      t.datetime :expires_at
     end
   end
 end

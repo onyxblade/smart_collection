@@ -5,8 +5,6 @@ module SmartCollection
       case
       when config.dig(:cached_by, :table)
         SmartCollection::CacheManager::Table
-      when config.dig(:cached_by, :cache_store)
-        SmartCollection::CacheManager::CacheStore
       end
     end
 
