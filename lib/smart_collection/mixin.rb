@@ -16,29 +16,21 @@ module SmartCollection
 
     def uncached_scope owner
       scopes = @config.scopes_proc.(owner)
-=begin
-SELECT
-    products.*
-FROM
-    products
-WHERE
-    id IN (SELECT
-            id
-        FROM
-            ((SELECT
-                `products`.`id`
-            FROM
-                `products`
-            WHERE
-                `products`.`id` IN (1 , 2, 3)) UNION (SELECT
-                `products`.`id`
-            FROM
-                `products`
-            WHERE
-                `products`.`id` IN (4 , 5, 6))) AS ids)
-=end
       raise unless scopes.all?{|x| x.klass == @config.item_class}
-      raise
+      if scopes.empty?
+        @config.item_class.where('1 = 0')
+      else
+        scopes = scopes.map do |scope|
+          if !scope.select_values.empty?
+            new_scope = scope.dup
+            new_scope.select_values = []
+            new_scope
+          else
+            scope
+          end
+        end
+        @config.item_class.from("(#{scopes.map{|x| "#{x.to_sql}"}.join(' UNION ')}) as #{@config.item_class.table_name}")
+      end
     end
 
     def cached_scope owner
@@ -47,9 +39,7 @@ WHERE
 
     def define_association base
       config = @config
-      if cache_class = CacheManager.determine_class(@raw_config)
-        config.cache_manager = cache_class.new(model: base, config: config)
-      end
+      config.cache_manager = CacheManager.new(model: base, config: config)
 
       mixin_options = {
         name: config.items_name,
@@ -67,17 +57,15 @@ WHERE
         type: :collection
       }
 
-      case
-      when cache_class == SmartCollection::CacheManager::Table
-        cached_name = "cached_#{config.items_name}".to_sym
-        mixin_options[:preloader] = -> owners {
-          owners.reject(&:cache_exists?).each(&:update_cache)
-          Associationist.preload(owners, cached_items: config.item_name)
-          owners.map do |owner|
-            [owner, owner.cached_items.map{|item| item.send(config.item_name)}]
-          end.to_h
-        }
-      end
+      cached_name = "cached_#{config.items_name}".to_sym
+      mixin_options[:preloader] = -> owners {
+        owners.reject(&:cache_exists?).each(&:update_cache)
+        Associationist.preload(owners, cached_items: config.item_name)
+        owners.map do |owner|
+          [owner, owner.cached_items.map{|item| item.send(config.item_name)}]
+        end.to_h
+      }
+
       base.include Associationist::Mixin.new(mixin_options)
     end
 
@@ -86,6 +74,8 @@ WHERE
     end
 
     def define_inverse_association base
+      return unless @config.inverse_association
+
       mixin_options = {
         name: @config.inverse_association,
         scope: -> owner {

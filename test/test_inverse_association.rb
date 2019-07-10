@@ -30,6 +30,12 @@ class TestInverseAssociation < SmartCollection::Test
     assert_equal product.reload.collections, collections
     collections.each(&:reload)
     collections.each{|collection| assert collection.reload.cache_exists? }
+
+    collection_to_modify = collections.second
+    reload_and_reset_scopes collection_to_modify, []
+    collection_to_modify.expire_cache
+
+    assert_equal product.reload.collections, collections.reject{|x| x == collection_to_modify}
   end
 
 end

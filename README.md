@@ -2,7 +2,9 @@
 
 [![Gem Version](https://badge.fury.io/rb/smart_collection.svg)](https://badge.fury.io/rb/smart_collection) [![Build Status](https://travis-ci.org/CicholGricenchos/smart_collection.svg?branch=master)](https://travis-ci.org/CicholGricenchos/smart_collection)
 
-Smart collection or automated collection is [a concept raised by Shopify](https://help.shopify.com/en/manual/products/collections/automated-collections). Those collections automatically include or exclude items according to conditions defined by users.
+Smart collection or automated collection is [a concept putted forward by Shopify](https://help.shopify.com/en/manual/products/collections/automated-collections). Those collections automatically include or exclude items according to conditions defined by users.
+
+This plugin allows you to define a collection as an union of multiple scopes; meanwhile preloading and inverse query are possible.
 
 Install
 ------
@@ -12,8 +14,8 @@ Add `gem 'smart_collection'` to your Gemfile and `bundle`.
 Usage
 ------
 
-Define a collection model:
 ```ruby
+# create collection table
 class CreateCollections < ActiveRecord::Migration[5.0]
   def change
     create_table :collections do |t|
@@ -23,122 +25,52 @@ class CreateCollections < ActiveRecord::Migration[5.0]
   end
 end
 
-class Collection < ActiveRecord::Base
-  include SmartCollection::Mixin.new(
-    items: :products,
-    class_name: 'Product', # Optional
-    scopes: -> (collection) {
-      Product.all
-    }
-  )
-end
-```
-
-Create a collection:
-```ruby
-collection = Collection.create(
-  rule: {
-    and: [
-      {
-        or: [
-          {
-            association: {
-              class_name: 'Catalog',
-              id: @pen_catalog.id,
-              source: 'products'
-            }
-          },
-          {
-            association: {
-              class_name: 'Catalog',
-              id: @pencil_catalog.id,
-              source: 'products'
-            }
-          }
-        ]
-      },
-      {
-        condition: {
-          joins: 'properties',
-          where: {
-            properties: {
-              value: 'Red'
-            }
-          }
-        }
-      }
-    ]
-  }
-)
-```
-
-Fetch products by rules:
-```ruby
-collection.products #=> products that are red and associated with pen_catalog and pencil_catalog
-collection.products.where(in_stock: true).order(id: :desc) #=> association returns a scope
-```
-
-You are free to use ActiveRecord style `joins` and `where` arguments in `condition` clause.
-
-Cache
-------
-Cache allows you to use `preload` to avoid n+1 queries, like:
-
-```ruby
-Collection.where(id: [1, 2]).preload(products: :properties)
-```
-
-### Use table for cache
-Create a cache item table:
-```ruby
+# create cache table
 class CreateSmartCollectionCachedItems < ActiveRecord::Migration[5.0]
   def change
     create_table :smart_collection_cached_items do |t|
       t.integer :collection_id
       t.integer :item_id
-      t.datetime :expires_at
     end
   end
 end
-```
 
-By default, this cache table is shared. So there's no need to create cache table per collection.
-
-Modify the model to:
-```ruby
+# define model
 class Collection < ActiveRecord::Base
-  serialize :rule, JSON
-
   include SmartCollection::Mixin.new(
-    items: :products,
-    cached_by: {
-      table: :default,
-      expires_in: 1.hour
-    }
+    item_association: :products,
+    item_class_name: 'Product',
+    # scopes option can be a method name / proc that returns an array of scopes
+    scopes: -> (collection) {
+      [Product.all]
+    },
+    # the table :smart_collection_cached_items is used when cache_table_name setted :default
+    cache_table_name: :default,
+    # cache_expires_in can be a duration or a method name / proc that returns a duration
+    cache_expires_in: 1.hour,
+    # defines an inverse association on the item class
+    inverse_association: :collections
   )
 end
 ```
 
-### Use cache store for cache
-Modify the model to:
 ```ruby
-class Collection < ActiveRecord::Base
-  serialize :rule, JSON
+# create a collection:
+collection = Collection.create
+# fetch products by defined scope
+collection.products # => all products will be returned
+collection.products.where(in_stock: true).order(id: :desc) #=> association returns a scope
+```
 
-  include SmartCollection::Mixin.new(
-    items: :products,
-    cached_by: {
-      cache_store: Rails.cache,
-      expires_in: 1.hour
-    }
-  )
-end
+```ruby
+# use includes or preload to avoid n+1 queries
+Collection.where(id: [1, 2]).preload(products: :properties)
 ```
 
 Test
 ------
 ```shell
-bundle rake
+bundle exec rake
 ```
 
 License

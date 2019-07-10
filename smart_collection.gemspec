@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
 
   spec.files         = Dir.glob("lib/**/*.rb")
 
-  spec.add_runtime_dependency 'associationist', '~> 0.1.1'
+  spec.add_runtime_dependency 'associationist', '~> 0.1.3'
   spec.add_development_dependency 'pry'
   spec.add_development_dependency 'sqlite3'
   spec.add_development_dependency 'database_cleaner'

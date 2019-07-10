@@ -109,4 +109,27 @@ class TestCollection < SmartCollection::Test
     assert collection_b.reload.cache_exists?
   end
 
+  def test_new_record_loading
+    scopes = [@scope_of_group_a, @scope_of_group_b, @scope_of_group_c]
+    collection = Collection.new(scopes: scopes)
+    assert_equal scopes.inject(:+), collection.products
+  end
+
+  def test_duplicate_items
+    collection = collection_with_scopes([@scope_of_group_a, @scope_of_group_a])
+    assert_equal @scope_of_group_a.count, collection.products.count
+  end
+
+  def test_using_scope_with_select_values
+    scope_a = Product.where(id: @group_a.map(&:id)).select(:id)
+    scope_b = Product.where(id: @group_b.map(&:id)).select(:id)
+
+    collection = Collection.new
+    collection.define_singleton_method :scopes do
+      [scope_a, scope_b]
+    end
+
+    assert collection.products.all?{|x| x.created_at.present?}
+  end
+
 end

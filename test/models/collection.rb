@@ -15,16 +15,14 @@ class Collection < ActiveRecord::Base
   serialize :scope_ids, JSON
 
   include SmartCollection::Mixin.new(
-    items: :products,
-    class_name: 'Product',
+    item_association: :products,
+    item_class_name: 'Product',
     scopes: -> (owner) {
       owner.scopes
     },
     inverse_association: :collections,
-    cached_by: {
-      table: true,
-      expires_in: 1.hour
-    }
+    cache_table: :default,
+    cache_expires_in: 1.hour
   )
 
   def scopes= scopes
