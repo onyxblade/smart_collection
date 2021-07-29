@@ -7,7 +7,7 @@ require 'pry'
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 
-Dir.glob("#{File.dirname(__FILE__)}/models/*.rb").each do |model|
+Dir.glob("#{File.dirname(__FILE__)}/models/*.rb").sort.reverse.each do |model|
   require_relative model
 end
 

@@ -16,7 +16,10 @@ class TestInverseAssociation < SmartCollection::Test
     collections.each{|collection| ensure_association_loaded collection }
 
     product = @group_a.first
-    assert_equal product.reload.collections, collections
+    product.reload
+    assert_queries 2 do
+      assert_equal product.collections.to_a, collections.to_a
+    end
   end
 
   def test_auto_update_cache
@@ -26,8 +29,11 @@ class TestInverseAssociation < SmartCollection::Test
     collections.each(&:expire_cache)
     collections.each{|collection| refute collection.cache_exists? }
 
-    product = @group_a.first
-    assert_equal product.reload.collections, collections
+    product = @group_a.first.reload
+    assert_queries 2 + 3 * 3 do
+      assert_equal product.collections, collections
+    end
+
     collections.each(&:reload)
     collections.each{|collection| assert collection.reload.cache_exists? }
 
@@ -35,7 +41,9 @@ class TestInverseAssociation < SmartCollection::Test
     reload_and_reset_scopes collection_to_modify, []
     collection_to_modify.expire_cache
 
-    assert_equal product.reload.collections, collections.reject{|x| x == collection_to_modify}
+    product.reload
+    assert_queries 2 + 3 do
+      assert_equal product.collections, collections.reject{|x| x == collection_to_modify}
+    end
   end
-
 end
