@@ -1,6 +1,6 @@
 # smart_collection
 
-[![Gem Version](https://badge.fury.io/rb/smart_collection.svg)](https://badge.fury.io/rb/smart_collection) [![Build Status](https://travis-ci.org/CicholGricenchos/smart_collection.svg?branch=master)](https://travis-ci.org/CicholGricenchos/smart_collection)
+[![Gem Version](https://badge.fury.io/rb/smart_collection.svg)](https://badge.fury.io/rb/smart_collection) [![Build Status](https://travis-ci.com/onyxblade/smart_collection.svg?branch=master)](https://travis-ci.com/onyxblade/smart_collection)
 
 Smart collection or automated collection is [a concept putted forward by Shopify](https://help.shopify.com/en/manual/products/collections/automated-collections). Those collections automatically include or exclude items according to conditions defined by users.
 
